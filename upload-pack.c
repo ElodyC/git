@@ -38,6 +38,9 @@
 #define CLIENT_SHALLOW	(1u << 18)
 #define HIDDEN_REF	(1u << 19)
 
+#define ALL_FLAGS (THEY_HAVE | OUR_REF | WANTED | COMMON_KNOWN | SHALLOW | \
+		NOT_SHALLOW | CLIENT_SHALLOW | HIDDEN_REF)
+
 static timestamp_t oldest_have;
 
 static int deepen_relative;
@@ -1394,6 +1397,8 @@ int upload_pack_v2(struct repository *r, struct argv_array *keys,
 {
 	enum fetch_state state = FETCH_PROCESS_ARGS;
 	struct upload_pack_data data;
+
+	clear_object_flags(ALL_FLAGS);
 
 	git_config(upload_pack_config, NULL);
 
