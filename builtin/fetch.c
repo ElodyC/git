@@ -410,7 +410,7 @@ static struct ref *get_ref_map(struct remote *remote,
 	/* opportunistically-updated references: */
 	struct ref *orefs = NULL, **oref_tail = &orefs;
 
-	struct string_list existing_refs = STRING_LIST_INIT_DUP;
+	struct hashmap existing_refs;
 
 	if (rs->nr) {
 		struct refspec *fetch_refspec;
@@ -504,19 +504,24 @@ static struct ref *get_ref_map(struct remote *remote,
 
 	ref_map = ref_remove_duplicates(ref_map);
 
-	for_each_ref(add_existing, &existing_refs);
+	refname_hash_init(&existing_refs);
+	for_each_ref(add_one_refname, &existing_refs);
+
 	for (rm = ref_map; rm; rm = rm->next) {
 		if (rm->peer_ref) {
-			struct string_list_item *peer_item =
-				string_list_lookup(&existing_refs,
-						   rm->peer_ref->name);
+			struct hashmap_entry key;
+			const char *refname = rm->peer_ref->name;
+			struct refname_hash_entry *peer_item;
+
+			hashmap_entry_init(&key, memhash(refname, strlen(refname)));
+			peer_item = hashmap_get(&existing_refs, &key, refname);
 			if (peer_item) {
-				struct object_id *old_oid = peer_item->util;
+				struct object_id *old_oid = &peer_item->oid;
 				oidcpy(&rm->peer_ref->old_oid, old_oid);
 			}
 		}
 	}
-	string_list_clear(&existing_refs, 1);
+	hashmap_free(&existing_refs, 1);
 
 	return ref_map;
 }
