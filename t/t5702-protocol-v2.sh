@@ -440,7 +440,7 @@ test_expect_success 'upload-pack respects client shallows' '
 
 	# Add extra commits to the client so that the whole fetch takes more
 	# than 1 request (due to negotiation)
-	for i in $(seq 1 32)
+	for i in $(test_seq 1 32)
 	do
 		test_commit -C client c$i
 	done &&
